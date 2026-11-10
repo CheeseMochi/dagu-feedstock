@@ -1,0 +1,49 @@
+# Dagu (https://github.com/dagucloud/dagu), repackaged for conda from its official release
+# binaries. Upstream builds a single static Go binary with the web UI embedded (the UI needs a
+# Node build), so this recipe ships their binary rather than rebuilding it; see README.md.
+# .github/scripts/bump_dagu_version.py updates the version and the four checksums below.
+{% set version = "2.26.0" %}
+{% set sha_osx_arm64 = "0af770c11077ba88626882989bf95ba4b10cab38902a3d3e3f6e08d52d89c248" %}
+{% set sha_osx_64 = "a0a29953dfa7c9bad4e7b8d379ca4c9051839484ff64f44c0589a7fa1d6dc594" %}
+{% set sha_linux_64 = "2b1cab5dbab7c7dc6607d807e2cbf6597f26d5a5d09442e2c2abcfe1acbf9e68" %}
+{% set sha_linux_aarch64 = "76bf8a8105d815b1589c211df053e2f9db6c399780e4e0bbbfd07f69890045ad" %}
+{% set base = "https://github.com/dagucloud/dagu/releases/download/v" ~ version ~ "/dagu_" ~ version %}
+
+package:
+  name: dagu
+  version: "{{ version }}"
+
+source:
+  - url: {{ base }}_darwin_arm64.tar.gz  # [osx and arm64]
+    sha256: {{ sha_osx_arm64 }}  # [osx and arm64]
+  - url: {{ base }}_darwin_amd64.tar.gz  # [osx and x86_64]
+    sha256: {{ sha_osx_64 }}  # [osx and x86_64]
+  - url: {{ base }}_linux_amd64.tar.gz  # [linux and x86_64]
+    sha256: {{ sha_linux_64 }}  # [linux and x86_64]
+  - url: {{ base }}_linux_arm64.tar.gz  # [linux and aarch64]
+    sha256: {{ sha_linux_aarch64 }}  # [linux and aarch64]
+
+build:
+  number: 0
+  skip: true  # [win]
+  # A prebuilt, statically linked Go binary: nothing to relocate, and rewriting it would
+  # break its signature on macOS.
+  binary_relocation: false
+  script: install -d "$PREFIX/bin" && install -m 755 dagu "$PREFIX/bin/dagu"
+
+test:
+  commands:
+    - dagu version
+    - test "$(dagu version 2>&1 | tail -1)" = "{{ version }}"
+
+about:
+  home: https://github.com/dagucloud/dagu
+  license: GPL-3.0-only
+  license_file: LICENSE
+  summary: Local-first workflow engine and scheduler with a web UI
+  description: |
+    Dagu runs DAGs of shell steps on a schedule, with a built-in web UI. This package puts the
+    official release binary on the conda env's PATH, so it can be a dependency of other conda
+    packages (agent-org uses it as its scheduler and dashboard).
+  doc_url: https://docs.dagu.cloud
+  dev_url: https://github.com/dagucloud/dagu
