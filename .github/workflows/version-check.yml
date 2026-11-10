@@ -1,0 +1,54 @@
+name: check dagu version
+
+# Dagu releases every week or two; a daily check opens (or refreshes) one bump PR.
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for a newer Dagu release
+        id: bump
+        run: python3 .github/scripts/bump_dagu_version.py
+
+      - name: Open or update the bump PR
+        if: steps.bump.outputs.bumped == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
+          OLD_VERSION: ${{ steps.bump.outputs.old_version }}
+        run: |
+          set -euo pipefail
+          branch="bot/bump-dagu"
+          bot_email="github-actions[bot]@users.noreply.github.com"
+          open_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')
+          # Never overwrite a person's commits on the bump branch.
+          git fetch origin "$branch" 2>/dev/null || true
+          if git rev-parse --verify -q "origin/$branch" >/dev/null &&
+             [ "$(git log -1 --format='%ae' "origin/$branch")" != "$bot_email" ]; then
+            echo "::warning::dagu $NEW_VERSION is out, but $branch has non-bot commits; left alone"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "$bot_email"
+          git checkout -B "$branch"
+          git add recipe/meta.yaml
+          git commit -m "Bump dagu $OLD_VERSION -> $NEW_VERSION"
+          git push --force origin "$branch"
+          if [ -z "$open_pr" ]; then
+            gh pr create --head "$branch" --title "Bump dagu $OLD_VERSION -> $NEW_VERSION" \
+              --body "Automated bump. Upstream notes: https://github.com/dagucloud/dagu/releases/tag/v$NEW_VERSION. After merging, tag v$NEW_VERSION to publish (RELEASING.md)."
+          else
+            gh pr edit "$open_pr" --title "Bump dagu $OLD_VERSION -> $NEW_VERSION"
+          fi
+          gh workflow run test.yml --ref "$branch"

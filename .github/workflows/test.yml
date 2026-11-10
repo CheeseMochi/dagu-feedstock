@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # version-check.yml starts this for its own bump PRs: pushes made with GITHUB_TOKEN don't
+  # trigger push/pull_request events.
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]  # osx-arm64 and linux-64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      CONDA_PLUGINS_USE_SHARDED_REPODATA: "0"  # same workaround as brew-feedstock
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v4
+        with:
+          activate-environment: build
+          python-version: "3.12"
+          channels: conda-forge
+          channel-priority: strict
+      - run: conda install -n build -c conda-forge conda-build -y
+      - run: bash tests/run.sh
