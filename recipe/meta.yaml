@@ -2,11 +2,11 @@
 # binaries. Upstream builds a single static Go binary with the web UI embedded (the UI needs a
 # Node build), so this recipe ships their binary rather than rebuilding it; see README.md.
 # .github/scripts/bump_dagu_version.py updates the version and the four checksums below.
-{% set version = "2.26.0" %}
-{% set sha_osx_arm64 = "0af770c11077ba88626882989bf95ba4b10cab38902a3d3e3f6e08d52d89c248" %}
-{% set sha_osx_64 = "a0a29953dfa7c9bad4e7b8d379ca4c9051839484ff64f44c0589a7fa1d6dc594" %}
-{% set sha_linux_64 = "2b1cab5dbab7c7dc6607d807e2cbf6597f26d5a5d09442e2c2abcfe1acbf9e68" %}
-{% set sha_linux_aarch64 = "76bf8a8105d815b1589c211df053e2f9db6c399780e4e0bbbfd07f69890045ad" %}
+{% set version = "2.27.0" %}
+{% set sha_osx_arm64 = "d919f5f6fd8d3ebfb5d5b85bd703b453f73edda96714dfbd3b5eb8fd1b55ecd2" %}
+{% set sha_osx_64 = "c34102b3d6e9225560e771e0e94ca5a172e76ff270ec7a472bd9260af0bc7b52" %}
+{% set sha_linux_64 = "a9045768c9777d0b938585696e0491bc0ce46fbeb0419989b34fde63a0cc6f85" %}
+{% set sha_linux_aarch64 = "be66823266538330e440352658304c1261047a8e58b83a6b66c098a86629d2da" %}
 {% set base = "https://github.com/dagucloud/dagu/releases/download/v" ~ version ~ "/dagu_" ~ version %}
 
 package:
